@@ -63,8 +63,17 @@ int main(int argc, char** argv) {
             int     AIWins, 
                     GameCnt; //File I/O variables (internal) AIWins - Buffer for number of wins AI has logged  GameCnt - Buffer for number of games played
             float   C2W; //Chance to Win against Computer (internal), to be calculated as a percent
+            struct record
+            {
+                string Name; //player name
+                char Vs; //W or L for winner/loser
+                int Ps; //points accumulated
+                int Ts; //turns
+                
+            };
             vector<string> Scores1,
                            Scores2; //Scorecard Vector
+            vector<record> Scrs; //final scorecard version
         //Core Variables
             char    Menu; //User Menu Select Option, Valid options are N, S, R, X.  Other values simply register no change.
             string  P1Name, 
@@ -73,6 +82,8 @@ int main(int argc, char** argv) {
             string  guess, 
                     ValBuff; //guess: allows copy/paste of code for valid results per player
             short   Len,    //game length variable, size irrelevant game will end if all points earned
+                    WinPts,
+                    LosePts,
                     P1Pts, 
                     P2Pts; //Points values for players, determines winner if both players still have ships
             bool    suSel; //setup selector for updating ships with || or XX based on game locations, may delete?
@@ -104,10 +115,7 @@ int main(int argc, char** argv) {
     
     //Initialize Master Board
     suSel=false;//game is in setup mode
-    
-    
-            
-            
+
     MBdFill(BrdMst,SIZE9);
     BBdFill(Brd1S,SIZE9);
     BBdFill(Brd2S,SIZE9);
@@ -131,26 +139,46 @@ int main(int argc, char** argv) {
     { //Start Switch (Menu) Box
         case 'N': break; //Passes through
         case 'S': //High Score Display
-            inFile.open("Scores.txt", ios::in); 
-            inFile>>AIWins; 
-            inFile>>GameCnt; 
-            C2W=100*(fdim(GameCnt,AIWins)/static_cast<float>(GameCnt)); //calculates AI wins versus total games
-            cout<<"The computer has won "<<AIWins<<" times"<<endl;  
-            cout<<"Games Played: "<<GameCnt<<endl; 
-            cout<<fixed<<setprecision(1)<<"Chance to win = "<<C2W<<endl;
+            cout<<Scrs.size()<<"Scr Size"<<endl;
+            inFile.open("Test1.txt", ios::in);  //reads a txt to a vector
+                while(!inFile.eof())
+                {
+                    record Plyr;
+                    if(inFile >> Plyr.Name >> Plyr.Vs >> Plyr.Ps >> Plyr.Ts)
+                    {Scrs.push_back(Plyr);}
+                    else{
+                        inFile.clear();
+                        inFile.ignore(100,'\n');
+                    }
+                }
             inFile.close();
+                        cout<<Scrs.size()<<"Scr Size"<<endl;
+                        cout<<"Name"<<"\t"<<"W/L"<<"\t"<<"Pts"<<"\t"<<"Turns"<<endl;
+            for(int h=0;h<(Scrs.size());h++)
+            {cout<<Scrs[h].Name<<"\t"<<Scrs[h].Vs<<"\t"<<Scrs[h].Ps<<"\t"<<Scrs[h].Ts<<endl;
+            }
+                                    cout<<Scrs.size()<<"Scr Size"<<endl;
             break;
         case 'R': //Reset Score
-            inFile.open("Scores.txt", ios::in);    
-            inFile>>AIWins;
-            inFile>>GameCnt;
-            inFile.close();
-            GameCnt=0; //reset game count
-            AIWins=0; //reset AI wins
-            outFile.open("Scores.txt",ios::out);
-            outFile << AIWins<<"\n";
-            outFile << GameCnt;
+            Scrs={};
+            outFile.open("Test1.txt",ios::out);  //puts a vector in a txt
+           for(int k=0;k<Scrs.size();k++)
+           {
+               outFile << Scrs[k].Name<<"\t"<<Scrs[k].Vs<<"\t"<<Scrs[k].Ps<<"\t"<<Scrs[k].Ts<<"\n";
+            }
             outFile.close();
+             inFile.open("Test1.txt", ios::in);  //reads a txt to a vector
+                while(!inFile.eof())
+                {
+                    record Plyr;
+                    if(inFile >> Plyr.Name >> Plyr.Vs >> Plyr.Ps >> Plyr.Ts)
+                    {Scrs.push_back(Plyr);}
+                    else{
+                        inFile.clear();
+                        inFile.ignore(100,'\n');
+                    }
+                }
+            inFile.close();
             break;
         case 'X': return 0; break;
         //enter default case here
@@ -167,36 +195,8 @@ int main(int argc, char** argv) {
     cout<<"Type a name for Player 2"<<endl;
     cout<<"To play against the computer, type AI"<<endl;
     getline (cin,P2Name);
-    string K,G;
-    K="20";
-    G="30";
-    Scores1={P1Name,P2Name};
-    Scores2={"0", "10"};
-    outFile.open("Test1.txt",ios::out);  //puts a vector in a txt
-            for(int k=0;k<Scores2.size();k++)
-            {
-                outFile << Scores1[k]<<"\t";
-            }
-            
-            outFile.close();
-    
-    inFile.open("Test1.txt", ios::in);  //reads a txt to a vector
-            for(int o=0;o<Scores2.size();o++)
-            {
-                string thing;
-                while(getline(inFile,thing))
-                {
-                    if(thing.size() > 0)
-                    {Scores2.push_back(thing);}
-                }
-            }
-            inFile.close();
-           
-            for(int h=0;h<Scores2.size();h++)
-            {
-                cout<<Scores2[h]<<"\t";
-            }
-            cout<<endl;
+ 
+    cout<<endl;
             
     if (P2Name!="AI") //Bypassed by AI player
     {
@@ -356,15 +356,10 @@ cout<<endl;
     cout<<"Your Ship's Coordinates Are:"<<endl;
     ICoord(P1S5a,SIZE5);
     UpdSBrd(P1S5a,SIZE5,Brd1S,SIZE9,BrdMst,suSel);
-    
     //End Player 1 Setup
-    
     DisBrd(Brd1S,SIZE9); 
-}
-    
-    
-    
-    
+    }
+
     if (P2Name!="AI") //Bypassed by AI player
     {
     cout<<"********************************************************"<<endl;
@@ -521,11 +516,8 @@ cout<<endl;
     cout<<"Your Ship's Coordinates Are:"<<endl;
     ICoord(P2S5a,SIZE5);
     UpdSBrd(P2S5a,SIZE5,Brd2S,SIZE9,BrdMst,suSel);
-    
-    //End Player 1 Setup
-    
+    //End Player 2 Setup
     DisBrd(Brd2S,SIZE9); 
-    
     }//End AI Bypass for Player 2 Setup,
     
     //Begin AI Player Setup
@@ -655,7 +647,7 @@ cout<<endl;
     cout<<"Input number of Turns to play"<<endl;
     cout<<"Game will End after final turn or when all Ships are Destroyed!"<<endl;
     cin>>Len;
-    
+    cin.ignore();
     //Begin Gameplay While Loop
     Win="null"; //Force loop to run
     P1Pts=0;
@@ -663,7 +655,7 @@ cout<<endl;
     while (Win=="null") //Run forced while loop until winner is declared
     {    
     //Begin Turn Loop, Adjust turns below this line   
-    for (int Turn=1; Turn<Len; Turn++)
+    for (int Turn=1; Turn<=Len; Turn++)
     {
         
     //Begin New Turn Transition Text
@@ -776,32 +768,74 @@ cout<<endl;
     cout<<P1Name<<" has "<<P1Pts<<" Points"<<endl;
     cout<<P2Name<<" has "<<P2Pts<<" Points"<<endl;
     cout<<Win<<" wins!"<<endl;
-    if (Win=="AI") //Add AI wins and game count to score file
-    {
-        inFile.open("Scores.txt", ios::in);    
-        inFile>>AIWins;
-        inFile>>GameCnt;
-        inFile.close();
-        GameCnt++;
-        AIWins++;
-        outFile.open("Scores.txt",ios::out);
-        outFile << AIWins<<"\n";
-        outFile << GameCnt;
-        outFile.close();
-    }
-    else //Add game count to score file
-    {
-        inFile.open("Scores.txt", ios::in);    
-        inFile>>AIWins;
-        inFile>>GameCnt;
-        inFile.close();
-        GameCnt++; 
-        outFile.open("Scores.txt",ios::out);
-        outFile << AIWins<<"\n";
-        outFile << GameCnt;
-        outFile.close();
-    }
     
+    //End Display Text for Game
+    
+    if(P1Name==Win)
+    {WinPts=P1Pts; LosePts=P2Pts;}
+    else{WinPts=P2Pts;LosePts=P1Pts;}
+    Scrs={};
+    inFile.open("Test1.txt", ios::in);  //reads a txt to a vector
+            
+                while(!inFile.eof())
+                {            cout<<"test1"<<endl;
+
+                    record Plyr;
+                    if(inFile >> Plyr.Name >> Plyr.Vs >> Plyr.Ps >> Plyr.Ts)
+                    {Scrs.push_back(Plyr);}
+                    else
+                    {            cout<<"test2"<<endl;
+                        inFile.clear();
+                        inFile.ignore(100,'\n');
+                    }
+                    
+                }
+            inFile.close();
+    //Vector now loaded with text file data
+             
+    record Vctr;
+        Vctr.Name=Win;
+        Vctr.Vs='W';
+        Vctr.Ps=WinPts;
+        Vctr.Ts=Len;
+        Scrs.push_back(Vctr);
+    record Lsr;
+        if(Win==P1Name){Lsr.Name=P2Name;}
+        else {Lsr.Name=P1Name;}
+        Lsr.Vs='L';
+        Lsr.Ps=LosePts;
+        Lsr.Ts=Len;
+        Scrs.push_back(Lsr);
+        
+    outFile.open("Test1.txt",ios::out);  //puts a vector in a txt
+           for(int k=0;k<Scrs.size();k++)
+           {
+               outFile << Scrs[k].Name<<"\t"<<Scrs[k].Vs<<"\t"<<Scrs[k].Ps<<"\t"<<Scrs[k].Ts<<"\n";
+            }
+            outFile.close();
+            
+    
+    Scrs={};        
+            
+    inFile.open("Test1.txt", ios::in);  //reads a txt to a vector
+            
+                while(!inFile.eof())
+                {
+                    record Plyr;
+                    if(inFile >> Plyr.Name >> Plyr.Vs >> Plyr.Ps >> Plyr.Ts)
+                    {Scrs.push_back(Plyr);}
+                    else{
+                        inFile.clear();
+                        inFile.ignore(100,'\n');
+                    }
+                }
+            inFile.close();
+            
+    cout<<"Name"<<"\t"<<"W/L"<<"\t"<<"Pts"<<"\t"<<"Turns"<<endl;
+            for(int h=0;h<(Scrs.size());h++)
+            {cout<<Scrs[h].Name<<"\t"<<Scrs[h].Vs<<"\t"<<Scrs[h].Ps<<"\t"<<Scrs[h].Ts<<endl;
+            }
+            
     return 0;
 }
 void IPVal (string &ValBuff)
@@ -815,10 +849,8 @@ void IPVal (string &ValBuff)
     stringstream Row(ValBuff.substr(1,1)); //Convert number in string to a (lovely) integer
     Row>>RowChk; //Send Row string to RowChk integer
     if (ValBuff.length()!=2 || ColChk>"I" || ColChk<"A" || RowChk>9 || RowChk<1) //Determines if within appropriate bounds
-    { 
-        cout<<"Input Invalid, please use one Capital Letter followed by one Number!"<<endl;    cin>>ValBuff;}
+    {cout<<"Input Invalid, please use one Capital Letter followed by one Number!"<<endl;cin>>ValBuff;}
     }while (ValBuff.length()!=2 || ColChk>"I" || ColChk<"A" || RowChk>9 || RowChk<1); //Loops if not within appropriate bounds
-    
     
 }
 void FillShp (string a[],int SIZE, string user)
